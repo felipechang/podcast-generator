@@ -83,10 +83,45 @@ class TaskStatus(BaseModel):
     task_id: str
     status: str
     error: str | None = None
+    transcript: str | None = None
+    segment_count: int | None = None
 
 
 # In-memory storage for background tasks
 tasks: Dict[str, Dict[str, Any]] = {}
+
+
+async def process_preview_task(task_id: str, body: GenerateRequest, settings: Settings):
+    try:
+        tasks[task_id]["status"] = "generating_script"
+        transcript = await asyncio.to_thread(
+            generate_podcast_script,
+            body.content,
+            settings,
+            assistant_prompt=body.assistant_prompt,
+        )
+
+        tasks[task_id]["status"] = "parsing_script"
+        segments = parse_tagged_script(transcript)
+        if not segments:
+            tasks[task_id]["status"] = "failed"
+            tasks[task_id]["error"] = "LLM output had no [speaker] segments; check prompts and model output."
+            return
+
+        tasks[task_id]["status"] = "completed"
+        tasks[task_id]["result"] = {
+            "transcript": transcript,
+            "segment_count": len(segments),
+        }
+        logger.info(
+            "Preview Task %s completed: segments=%s",
+            task_id,
+            len(segments),
+        )
+    except Exception as e:
+        logger.exception("Preview Task %s failed", task_id)
+        tasks[task_id]["status"] = "failed"
+        tasks[task_id]["error"] = str(e)
 
 
 async def process_podcast_task(task_id: str, body: GenerateRequest, settings: Settings):
@@ -173,7 +208,18 @@ async def get_task_status(task_id: str):
 
     task = tasks[task_id]
     if task["status"] == "completed":
-        return Response(content=task["result"], media_type="audio/wav")
+        result = task["result"]
+        if isinstance(result, bytes):
+            return Response(content=result, media_type="audio/wav")
+        else:
+            # For preview tasks, result is a dict.
+            # We can return it as JSON.
+            return TaskStatus(
+                task_id=task_id,
+                status=task["status"],
+                transcript=result.get("transcript"),
+                segment_count=result.get("segment_count")
+            )
     elif task["status"] == "failed":
         return TaskStatus(task_id=task_id, status=task["status"], error=task["error"])
     else:
@@ -186,34 +232,38 @@ async def get_task_status_only(task_id: str):
         raise HTTPException(status_code=404, detail="Task not found")
 
     task = tasks[task_id]
+    status = task["status"]
+    error = task.get("error")
+    transcript = None
+    segment_count = None
+
+    if status == "completed" and isinstance(task.get("result"), dict):
+        result = task["result"]
+        transcript = result.get("transcript")
+        segment_count = result.get("segment_count")
+
     return TaskStatus(
         task_id=task_id,
-        status=task["status"],
-        error=task.get("error")
+        status=status,
+        error=error,
+        transcript=transcript,
+        segment_count=segment_count,
     )
 
 
-@app.post("/podcast/preview-script", response_model=PreviewResponse)
+@app.post("/podcast/preview-script", response_model=GenerateResponse)
 async def preview_script(
         body: GenerateRequest,
         settings: Annotated[Settings, Depends(_settings)],
 ):
-    """LLM only — returns transcript for debugging without calling TTS."""
+    """LLM only — returns task_id to poll for transcript."""
     if not settings.ollama_model.strip():
         raise HTTPException(status_code=503, detail="OLLAMA_MODEL is not set")
 
-    try:
-        transcript = await asyncio.to_thread(
-            generate_podcast_script,
-            body.content,
-            settings,
-            assistant_prompt=body.assistant_prompt,
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=503, detail=str(e)) from e
-    except Exception as e:
-        logger.exception("LLM failed")
-        raise HTTPException(status_code=502, detail=str(e)) from e
+    task_id = str(uuid.uuid4())
+    tasks[task_id] = {"status": "pending", "result": None, "error": None}
 
-    segments = parse_tagged_script(transcript)
-    return PreviewResponse(transcript=transcript, segment_count=len(segments))
+    # Start the background task
+    asyncio.create_task(process_preview_task(task_id, body, settings))
+
+    return GenerateResponse(task_id=task_id)

@@ -35,3 +35,9 @@ Content-Type: application/json
 }
 
 ###
+
+### Check preview task status (use the task_id from above)
+# @preview_task_id = ...
+# GET http://{{host}}/podcast/task/{{preview_task_id}}
+
+###
