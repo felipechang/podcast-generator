@@ -1,0 +1,35 @@
+### Health check
+GET http://127.0.0.1:8000/health
+
+###
+
+### Generate podcast
+POST http://127.0.0.1:8000/podcast/generate
+Content-Type: application/json
+
+{
+  "content": "Using an artificial intelligence tool that predicts the antimicrobial capabilities of peptides, researchers at the University of Pennsylvania were able to screen over 40 million peptides from venom—known as venom-encrypted peptides (VEPs)—in just hours. They discovered that 53 VEPs killed drug-resistant bacteria, including Escherichia coli and Staphylococcus aureus, and most of them were harmless to human red blood cells. Some even outperformed standard antibiotics. Antimicrobial resistance contributes to around 5 million deaths each year, including an estimated 1.27 million directly caused by resistant infections. Those numbers could double by 2050 without new treatments. New antibiotics targeting gram-negative bacteria could save millions of lives by 2050. Yet since the 1980s, very few truly novel classes of antibiotics have been developed, due to high costs and long timelines.",
+  "assistant_prompt": "Traduce al español y has que suene como una conversación amigable."
+}
+
+###
+
+### Check task status
+@task_id = 1702246e-cfa2-4178-ac05-3961461295af
+GET http://127.0.0.1:8000/podcast/task/{{task_id}}/status
+
+###
+
+### Download podcast
+GET http://127.0.0.1:8000/podcast/task/{{task_id}}
+
+### Preview podcast script
+POST http://127.0.0.1:8000/podcast/preview-script
+Content-Type: application/json
+
+{
+  "content": "Using an artificial intelligence tool that predicts the antimicrobial capabilities of peptides, researchers at the University of Pennsylvania were able to screen over 40 million peptides from venom—known as venom-encrypted peptides (VEPs)—in just hours. They discovered that 53 VEPs killed drug-resistant bacteria, including Escherichia coli and Staphylococcus aureus, and most of them were harmless to human red blood cells. Some even outperformed standard antibiotics. Antimicrobial resistance contributes to around 5 million deaths each year, including an estimated 1.27 million directly caused by resistant infections. Those numbers could double by 2050 without new treatments. New antibiotics targeting gram-negative bacteria could save millions of lives by 2050. Yet since the 1980s, very few truly novel classes of antibiotics have been developed, due to high costs and long timelines.",
+  "assistant_prompt": "Traduce al español y has que suene como una conversación amigable."
+}
+
+###

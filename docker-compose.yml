@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    image: podcast-generator:latest
+    container_name: podcast-generator
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+    volumes:
+      - ./voices:/voices:ro
+      - model-cache:/root/.cache
+
+volumes:
+  model-cache:
