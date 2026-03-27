@@ -3,6 +3,7 @@ services:
     build: .
     image: podcast-generator:latest
     container_name: podcast-generator
+    platform: linux/arm64
     restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -13,6 +14,13 @@ services:
     volumes:
       - ./voices:/voices:ro
       - model-cache:/root/.cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: apple
+              count: all
+              capabilities: [gpu]
 
 volumes:
   model-cache:

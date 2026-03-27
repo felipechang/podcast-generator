@@ -11,7 +11,7 @@ line with per-speaker voice cloning from reference WAV files, then concatenates 
   `glm-4.7-flash:latest`)
 - **Reference audio**: two WAV files (paths set via environment variables) used as voice prompts for cloning
 - **TTS stack**: install the optional `tts` extra so PyTorch and `chatterbox-tts` are available; a CUDA, MPS (Apple), or
-  CPU device is selected automatically at startup
+  CPU device is selected automatically at startup. For Apple Silicon acceleration in Docker, ensure your Docker Desktop settings allow GPU passthrough.
 
 ## Installation
 

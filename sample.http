@@ -1,10 +1,12 @@
+@host = 192.168.18.103:8000
+
 ### Health check
-GET http://127.0.0.1:8000/health
+GET http://{{host}}/health
 
 ###
 
 ### Generate podcast
-POST http://127.0.0.1:8000/podcast/generate
+POST http://{{host}}/podcast/generate
 Content-Type: application/json
 
 {
@@ -16,15 +18,15 @@ Content-Type: application/json
 
 ### Check task status
 @task_id = 1702246e-cfa2-4178-ac05-3961461295af
-GET http://127.0.0.1:8000/podcast/task/{{task_id}}/status
+GET http://{{host}}/podcast/task/{{task_id}}/status
 
 ###
 
 ### Download podcast
-GET http://127.0.0.1:8000/podcast/task/{{task_id}}
+GET http://{{host}}/podcast/task/{{task_id}}
 
 ### Preview podcast script
-POST http://127.0.0.1:8000/podcast/preview-script
+POST http://{{host}}/podcast/preview-script
 Content-Type: application/json
 
 {
