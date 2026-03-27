@@ -11,7 +11,8 @@ line with per-speaker voice cloning from reference WAV files, then concatenates 
   `glm-4.7-flash:latest`)
 - **Reference audio**: two WAV files (paths set via environment variables) used as voice prompts for cloning
 - **TTS stack**: install the optional `tts` extra so PyTorch and `chatterbox-tts` are available; a CUDA, MPS (Apple), or
-  CPU device is selected automatically at startup. For Apple Silicon acceleration in Docker, ensure your Docker Desktop settings allow GPU passthrough.
+  CPU device is selected automatically at startup. For Apple Silicon acceleration in Docker, ensure your Docker Desktop
+  settings allow GPU passthrough.
 
 ## Installation
 
@@ -40,7 +41,11 @@ directory when present (see `podcast_generator/config.py`).
 | `SPEAKER_1_VOICE` / `SPEAKER_2_VOICE` | Absolute or relative paths to existing WAV files                                   |
 | `TTS_DEFAULT_LANGUAGE`                | Chatterbox language id (default `es`; aliases like `spanish` → `es` are supported) |
 
-**Voices and host names:** Put your reference WAV files in the `voices/` directory (or another path the process can read) and set `SPEAKER_1_VOICE` / `SPEAKER_2_VOICE` to those files—for example `voices/YourHost.wav`. Update `SPEAKER_1_NAME` and `SPEAKER_2_NAME` so the LLM uses the same labels in `[Name]` dialogue tags (see [Script format](#script-format) below). In Docker, mounted files under `/voices/` work the same way; see `.env.example` for path examples.
+**Voices and host names:** Put your reference WAV files in the `voices/` directory (or another path the process can
+read) and set `SPEAKER_1_VOICE` / `SPEAKER_2_VOICE` to those files—for example `voices/YourHost.wav`. Update
+`SPEAKER_1_NAME` and `SPEAKER_2_NAME` so the LLM uses the same labels in `[Name]` dialogue tags (
+see [Script format](#script-format) below). In Docker, mounted files under `/voices/` work the same way; see
+`.env.example` for path examples.
 
 Chatterbox-specific environment variables (see `podcast_generator/chatterbox.py`):
 
@@ -76,6 +81,7 @@ and `device`.
 #### Example request
 
 ### Health check
+
 GET http://127.0.0.1:8000/health
 
 ### `POST /podcast/generate`
@@ -85,17 +91,19 @@ defaults to empty and is sent as the assistant turn before your source in the Ol
 
 **Response:** `{"task_id": "…"}` — returns a unique task ID immediately.
 
-Flow: LLM script → parse `[SpeakerName]` segments → TTS each segment with the matching reference WAV → concatenate WAVs. Generation happens in the background to avoid HTTP timeouts.
+Flow: LLM script → parse `[SpeakerName]` segments → TTS each segment with the matching reference WAV → concatenate WAVs.
+Generation happens in the background to avoid HTTP timeouts.
 
 #### Example request
 
 ### Generate podcast
+
 POST http://127.0.0.1:8000/podcast/generate
 Content-Type: application/json
 
 {
-  "content": "Brief notes about quantum computing for a general audience.",
-  "assistant_prompt": "Make it sound like a friendly conversation."
+"content": "Brief notes about quantum computing for a general audience.",
+"assistant_prompt": "Make it sound like a friendly conversation."
 }
 
 ### `GET /podcast/task/{task_id}/status`
@@ -104,11 +112,13 @@ Returns the current status of the background task.
 
 **Response:** `{"task_id": "…", "status": "…", "error": null}`
 
-Possible statuses: `pending`, `generating_script`, `parsing_script`, `synthesizing_audio`, `merging_audio`, `completed`, `failed`.
+Possible statuses: `pending`, `generating_script`, `parsing_script`, `synthesizing_audio`, `merging_audio`, `completed`,
+`failed`.
 
 #### Example request
 
 ### Check task status
+
 GET http://127.0.0.1:8000/podcast/task/{{task_id}}/status
 
 ### `GET /podcast/task/{task_id}`
@@ -120,6 +130,7 @@ Retrieves the generated podcast audio if completed, or current status if not.
 #### Example request
 
 ### Download podcast
+
 GET http://127.0.0.1:8000/podcast/task/{{task_id}}
 
 ### `POST /podcast/preview-script`
@@ -138,21 +149,23 @@ Useful for checking prompts and model output without running TTS.
 #### Example request
 
 ### Preview podcast script
+
 POST http://127.0.0.1:8000/podcast/preview-script
 Content-Type: application/json
 
 {
-  "content": "Brief notes about quantum computing for a general audience.",
-  "assistant_prompt": "Make it sound like a friendly conversation."
+"content": "Brief notes about quantum computing for a general audience.",
+"assistant_prompt": "Make it sound like a friendly conversation."
 }
 
 ### Dynamic variables example
+
 POST http://127.0.0.1:8000/podcast/preview-script
 Content-Type: application/json
 
 {
-  "content": "Brief notes about quantum computing for a general audience.",
-  "assistant_prompt": "The episode ID is {{$random.uuid}} and it was generated at {{$timestamp}}."
+"content": "Brief notes about quantum computing for a general audience.",
+"assistant_prompt": "The episode ID is {{$random.uuid}} and it was generated at {{$timestamp}}."
 }
 
 ### Example
@@ -182,9 +195,11 @@ mismatched or missing tags yield HTTP 422 with a clear message.
 
 This is a common issue with `resemble-perth` (a dependency of `chatterbox-tts`) which requires OpenMP.
 
-- **On Docker/Linux**: If you're building the container yourself, ensure `libgomp1` is installed. Our `Dockerfile` includes this by default.
+- **On Docker/Linux**: If you're building the container yourself, ensure `libgomp1` is installed. Our `Dockerfile`
+  includes this by default.
 - **On macOS (native installation)**: You may need to install the OpenMP library using Homebrew:
   ```bash
   brew install libomp
   ```
-  And then point the environment variable `DYLD_LIBRARY_PATH` or similar if the library is not found automatically. Usually, just installing `libomp` is enough for Python libraries that use it.
+  And then point the environment variable `DYLD_LIBRARY_PATH` or similar if the library is not found automatically.
+  Usually, just installing `libomp` is enough for Python libraries that use it.
