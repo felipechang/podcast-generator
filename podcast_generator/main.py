@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 import uuid
 from contextlib import asynccontextmanager
 from typing import Annotated, Dict, Any
@@ -27,7 +28,41 @@ async def lifespan(_: FastAPI):
         await asyncio.to_thread(chatterbox.start_chatterbox, settings.tts_default_language)
     except Exception:
         logger.exception("Chatterbox failed to start; TTS endpoints will fail until it loads")
-    yield
+
+    # Start cleanup task
+    cleanup_task = asyncio.create_task(cleanup_expired_tasks(settings.task_expiration_seconds))
+    try:
+        yield
+    finally:
+        cleanup_task.cancel()
+        try:
+            await cleanup_task
+        except asyncio.CancelledError:
+            pass
+
+
+async def cleanup_expired_tasks(expiration_seconds: int):
+    """Periodically removes tasks that have exceeded their expiration time."""
+    logger.info("Task cleanup worker started (expiration=%s seconds)", expiration_seconds)
+    while True:
+        try:
+            await asyncio.sleep(60)  # Check every minute
+            now = time.time()
+            to_delete = []
+            # Use list(tasks.keys()) to avoid "dictionary changed size during iteration"
+            for task_id in list(tasks.keys()):
+                task = tasks.get(task_id)
+                if task and now - task.get("created_at", 0) > expiration_seconds:
+                    to_delete.append(task_id)
+
+            for task_id in to_delete:
+                tasks.pop(task_id, None)
+                logger.info("Deleted expired task %s", task_id)
+
+        except asyncio.CancelledError:
+            break
+        except Exception:
+            logger.exception("Error in cleanup task")
 
 
 app = FastAPI(title="Podcast Generator", version="0.1.0", lifespan=lifespan)
@@ -193,7 +228,12 @@ async def generate_podcast(
         raise HTTPException(status_code=503, detail=str(e)) from e
 
     task_id = str(uuid.uuid4())
-    tasks[task_id] = {"status": "pending", "result": None, "error": None}
+    tasks[task_id] = {
+        "status": "pending",
+        "result": None,
+        "error": None,
+        "created_at": time.time(),
+    }
 
     # Start the background task
     asyncio.create_task(process_podcast_task(task_id, body, settings))
@@ -261,7 +301,12 @@ async def preview_script(
         raise HTTPException(status_code=503, detail="OLLAMA_MODEL is not set")
 
     task_id = str(uuid.uuid4())
-    tasks[task_id] = {"status": "pending", "result": None, "error": None}
+    tasks[task_id] = {
+        "status": "pending",
+        "result": None,
+        "error": None,
+        "created_at": time.time(),
+    }
 
     # Start the background task
     asyncio.create_task(process_preview_task(task_id, body, settings))

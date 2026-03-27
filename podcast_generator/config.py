@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     ollama_timeout_s: float = Field(default=600.0, alias="OLLAMA_TIMEOUT_S")
 
     tts_default_language: str = Field(default="es", alias="TTS_DEFAULT_LANGUAGE")
+    task_expiration_seconds: int = Field(default=3600, alias="TASK_EXPIRATION_SECONDS")
 
 
 @lru_cache
