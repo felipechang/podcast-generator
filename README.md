@@ -79,9 +79,9 @@ and `device`.
 
 #### Example request
 
-### Health check
-
+```http
 GET http://127.0.0.1:8000/health
+```
 
 ### `POST /podcast/generate`
 
@@ -95,15 +95,15 @@ Generation happens in the background to avoid HTTP timeouts.
 
 #### Example request
 
-### Generate podcast
-
+```http
 POST http://127.0.0.1:8000/podcast/generate
 Content-Type: application/json
 
 {
-"content": "Brief notes about quantum computing for a general audience.",
-"assistant_prompt": "Make it sound like a friendly conversation."
+  "content": "Brief notes about quantum computing for a general audience.",
+  "assistant_prompt": "Make it sound like a friendly conversation."
 }
+```
 
 ### `GET /podcast/task/{task_id}/status`
 
@@ -116,9 +116,9 @@ Possible statuses: `pending`, `generating_script`, `parsing_script`, `synthesizi
 
 #### Example request
 
-### Check task status
-
+```http
 GET http://127.0.0.1:8000/podcast/task/{{task_id}}/status
+```
 
 ### `GET /podcast/task/{task_id}`
 
@@ -128,9 +128,9 @@ Retrieves the generated podcast audio if completed, or current status if not.
 
 #### Example request
 
-### Download podcast
-
+```http
 GET http://127.0.0.1:8000/podcast/task/{{task_id}}
+```
 
 ### `POST /podcast/preview-script`
 
@@ -143,31 +143,35 @@ Useful for checking prompts and model output without running TTS. Use the `GET /
 
 #### Example request
 
-### Preview podcast script
-
+```http
 POST http://127.0.0.1:8000/podcast/preview-script
 Content-Type: application/json
 
 {
-"content": "Brief notes about quantum computing for a general audience.",
-"assistant_prompt": "Make it sound like a friendly conversation."
+  "content": "Brief notes about quantum computing for a general audience.",
+  "assistant_prompt": "Make it sound like a friendly conversation."
 }
+```
 
-# Then use the task_id from the response to check status or get transcript:
+Then use the `task_id` from the response to check status or get transcript:
 
-# GET http://127.0.0.1:8000/podcast/task/<task_id>
+```http
+GET http://127.0.0.1:8000/podcast/task/<task_id>
+```
 
-### Dynamic variables example
+Dynamic variables example:
 
+```http
 POST http://127.0.0.1:8000/podcast/preview-script
 Content-Type: application/json
 
 {
-"content": "Brief notes about quantum computing for a general audience.",
-"assistant_prompt": "The episode ID is {{$random.uuid}} and it was generated at {{$timestamp}}."
+  "content": "Brief notes about quantum computing for a general audience.",
+  "assistant_prompt": "The episode ID is {{$random.uuid}} and it was generated at {{$timestamp}}."
 }
+```
 
-### Example
+### Examples
 
 ```bash
 curl -sS -X POST http://127.0.0.1:8000/podcast/preview-script \
@@ -189,18 +193,3 @@ curl -sS http://127.0.0.1:8000/podcast/task/<task_id>
 The LLM is instructed to produce dialogue where **every utterance starts with** a tag using your configured names, for
 example `[Ana]` and `[Carlos]`, on its own token before the spoken text. The parser splits on these tags;
 mismatched or missing tags yield HTTP 422 with a clear message.
-
-## Troubleshooting
-
-### `OSError: libgomp.so.1 cannot open shared object file: No such file or directory`
-
-This is a common issue with `resemble-perth` (a dependency of `chatterbox-tts`) which requires OpenMP.
-
-- **On Docker/Linux**: If you're building the container yourself, ensure `libgomp1` is installed. Our `Dockerfile`
-  includes this by default.
-- **On macOS (native installation)**: You may need to install the OpenMP library using Homebrew:
-  ```bash
-  brew install libomp
-  ```
-  And then point the environment variable `DYLD_LIBRARY_PATH` or similar if the library is not found automatically.
-  Usually, just installing `libomp` is enough for Python libraries that use it.
