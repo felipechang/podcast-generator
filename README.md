@@ -40,6 +40,8 @@ directory when present (see `podcast_generator/config.py`).
 | `SPEAKER_1_VOICE` / `SPEAKER_2_VOICE` | Absolute or relative paths to existing WAV files                                   |
 | `TTS_DEFAULT_LANGUAGE`                | Chatterbox language id (default `es`; aliases like `spanish` → `es` are supported) |
 
+**Voices and host names:** Put your reference WAV files in the `voices/` directory (or another path the process can read) and set `SPEAKER_1_VOICE` / `SPEAKER_2_VOICE` to those files—for example `voices/YourHost.wav`. Update `SPEAKER_1_NAME` and `SPEAKER_2_NAME` so the LLM uses the same labels in `[Name]` dialogue tags (see [Script format](#script-format) below). In Docker, mounted files under `/voices/` work the same way; see `.env.example` for path examples.
+
 Chatterbox-specific environment variables (see `podcast_generator/chatterbox.py`):
 
 | Variable              | Description                                                          |
@@ -173,3 +175,16 @@ curl -sS http://127.0.0.1:8000/podcast/task/<task_id> -o episode.wav
 The LLM is instructed to produce dialogue where **every utterance starts with** a tag using your configured names, for
 example `[Ana]` and `[Carlos]`, on its own token before the spoken text. The parser splits on these tags;
 mismatched or missing tags yield HTTP 422 with a clear message.
+
+## Troubleshooting
+
+### `OSError: libgomp.so.1 cannot open shared object file: No such file or directory`
+
+This is a common issue with `resemble-perth` (a dependency of `chatterbox-tts`) which requires OpenMP.
+
+- **On Docker/Linux**: If you're building the container yourself, ensure `libgomp1` is installed. Our `Dockerfile` includes this by default.
+- **On macOS (native installation)**: You may need to install the OpenMP library using Homebrew:
+  ```bash
+  brew install libomp
+  ```
+  And then point the environment variable `DYLD_LIBRARY_PATH` or similar if the library is not found automatically. Usually, just installing `libomp` is enough for Python libraries that use it.
