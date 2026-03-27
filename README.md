@@ -43,8 +43,8 @@ directory when present (see `podcast_generator/config.py`).
 **Voices and host names:** Put your reference WAV files in the `voices/` directory (or another path the process can
 read) and set `SPEAKER_1_VOICE` / `SPEAKER_2_VOICE` to those files—for example `voices/YourHost.wav`. Update
 `SPEAKER_1_NAME` and `SPEAKER_2_NAME` so the LLM uses the same labels in `[Name]` dialogue tags (
-see [Script format](#script-format) below). In Docker, mounted files under `/voices/` work the same way; see
-`.env.example` for path examples.
+see [Script format](#script-format) below). In Docker, mounted files under `/app/voices/` work the same way; see
+`.env` for path examples.
 
 Chatterbox-specific environment variables (see `podcast_generator/chatterbox.py`):
 

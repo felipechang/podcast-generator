@@ -1,4 +1,4 @@
-@host = 192.168.18.103:8000
+@host = 127.0.0.0:8000
 
 ### Health check
 GET http://{{host}}/health
@@ -17,7 +17,7 @@ Content-Type: application/json
 ###
 
 ### Check task status
-@task_id = 1702246e-cfa2-4178-ac05-3961461295af
+@task_id = 1430ccfc-5925-4b7a-b07d-db9acc0ecb5e
 GET http://{{host}}/podcast/task/{{task_id}}/status
 
 ###
