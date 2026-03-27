@@ -1,9 +1,7 @@
-@host = 127.0.0.0:8000
+@host = 192.168.18.103:8000
 
 ### Health check
 GET http://{{host}}/health
-
-###
 
 ### Generate podcast
 POST http://{{host}}/podcast/generate
@@ -14,17 +12,6 @@ Content-Type: application/json
   "assistant_prompt": "Traduce al español y has que suene como una conversación amigable."
 }
 
-###
-
-### Check task status
-@task_id = 4c33cae0-0ff0-4c38-b778-4823db0acf99
-GET http://{{host}}/podcast/task/{{task_id}}/status
-
-###
-
-### Download podcast
-GET http://{{host}}/podcast/task/{{task_id}}
-
 ### Preview podcast script
 POST http://{{host}}/podcast/preview-script
 Content-Type: application/json
@@ -34,10 +21,9 @@ Content-Type: application/json
   "assistant_prompt": "Traduce al español y has que suene como una conversación amigable."
 }
 
-###
+### Check task status
+@task_id = 5a6b6dc4-b170-4cbc-89c8-fc3515d7eb19
+GET http://{{host}}/podcast/task/{{task_id}}/status
 
-### Check preview task status (use the task_id from above)
-# @preview_task_id = ...
-# GET http://{{host}}/podcast/task/{{preview_task_id}}
-
-###
+### Download task results
+GET http://{{host}}/podcast/task/{{task_id}}
